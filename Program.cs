@@ -102,7 +102,14 @@ namespace SteamBot_
 
         private static void OnFriendsList(SteamFriends.FriendsListCallback obj)
         {
-            //
+            foreach (var friend in obj.FriendList)
+            {
+                if (friend.Relationship == EFriendRelationship.RequestRecipient)
+                {
+
+                    steamFriends.AddFriend(friend.SteamID);
+                }
+            }
         }
 
         private static void OnAccountInfo(SteamUser.AccountInfoCallback obj)
