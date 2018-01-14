@@ -16,8 +16,15 @@ namespace SteamBot_
 
         private static string[] Argument = new string[4];
         private static SteamID steamIDMemory;
+        // public static string[] MemoryTemporary = new string[24];
 
         private static Dictionary<string, Command> Commands = new Dictionary<string, Command>();
+
+        public static Brainfuck BrainfuckClient;
+        public static void sayBrainFuck(string _)
+        {
+            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, _);
+        }
 
         private static SteamClient steamClient;
         private static CallbackManager callbackManager;
@@ -41,9 +48,11 @@ namespace SteamBot_
         }
         private static scenes currentStatus = scenes.Login;
 
-        static void ConsoleStatus(statusConsole status,string error_)
+        static void ConsoleStatus(statusConsole status, string error_)
         {
-            switch (status) { case statusConsole.LOGIN_DENIED:
+            switch (status)
+            {
+                case statusConsole.LOGIN_DENIED:
                     Console.Clear();
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"ERROR [LOGIN_DENIED]: {error_} ");
@@ -57,52 +66,49 @@ namespace SteamBot_
                     break;
             }
         }
-        static void CreateCommand(string command,Action action_) {
-            Commands.Add(command,new Command() { command_=command,action=action_});        
+        static void CreateCommand(string command, Action action_)
+        {
+            Commands.Add(command, new Command() { command_ = command, action = action_ });
         }
-        static void ExecuteCommand(string command) {
+        static void ExecuteCommand(string command)
+        {
             Commands[command].action();
             for (int i = 0; i < Argument.Length; i++) { Argument[i] = String.Empty; }
         }
 
-      
+
 
         static void Main(string[] args)
         {
 
             //Commands
 
-            CreateCommand("sum", new Action(delegate () {
-                if (!String.IsNullOrWhiteSpace(Argument[0]) && !String.IsNullOrWhiteSpace(Argument[1]))
-                {
-                    int a = int.Parse(Argument[0]);
-                    int b = int.Parse(Argument[1]);
-                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{a}+{b}={a + b}");
-                }
-                else
-                {
-                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error no Arguments");
-                }
+            CreateCommand("@brainfuck", new Action(delegate ()
+            {
+                BrainfuckClient = new Brainfuck(Argument[0]);
+                BrainfuckClient.RunCommand(Argument[0]);
             }));
 
+            
             //
 
             if (currentStatus == scenes.Login)
-            {          
+            {
                 Console.Write("Username: ");
                 string Username = Console.ReadLine();
                 Console.Clear();
                 Console.Write("Password: ");
                 string Password = Console.ReadLine();
 
-                bot = new BOT() {
+                bot = new BOT()
+                {
                     name = Username,
                     password = Password
                 };
                 currentStatus = scenes.TryingConnect;
 
             }
-           if (currentStatus == scenes.TryingConnect)
+            if (currentStatus == scenes.TryingConnect)
             {
                 steamClient = new SteamClient();
                 callbackManager = new CallbackManager(steamClient);
@@ -135,12 +141,13 @@ namespace SteamBot_
 
         private static void OnFriendMsg(SteamFriends.FriendMsgCallback obj)
         {
-            string[] ParamsSepearator = obj.Message.Split(' ');          
+            string[] ParamsSepearator = obj.Message.Split(' ');
             if (Commands.ContainsKey(ParamsSepearator[0]))
             {
-                for(int i = 1; i < ParamsSepearator.Length; i++)
+                for (int i = 1; i < ParamsSepearator.Length; i++)
                 {
-                    for (int a = 0; a < Argument.Length; a++) {
+                    for (int a = 0; a < Argument.Length; a++)
+                    {
                         try
                         {
                             Argument[a] = ParamsSepearator[i];
@@ -153,11 +160,11 @@ namespace SteamBot_
                 ExecuteCommand(ParamsSepearator[0]);
             }
         }
-             
+
         private static void OnPersonaState(SteamFriends.PersonaStateCallback obj)
         {
             Console.WriteLine("State change: {0}", obj.Name);
-        }   
+        }
 
         private static void OnFriendsList(SteamFriends.FriendsListCallback obj)
         {
@@ -183,8 +190,8 @@ namespace SteamBot_
 
         private static void OnLoggedOn(SteamUser.LoggedOnCallback obj)
         {
-            if ( obj.Result != EResult.OK )
-            {          
+            if (obj.Result != EResult.OK)
+            {
                 ConsoleStatus(statusConsole.ERROR, $"Unable to logon to Steam: {obj.Result}/{obj.ExtendedResult}");
                 botIsRunning = false;
                 return;
