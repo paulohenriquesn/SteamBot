@@ -2,4 +2,4 @@
 Created in C# is a ChatBot with several commands and own intelligence.
 
 Using <a href="https://github.com/SteamRE/SteamKit">SteamKit</a> (SteamRE)<br>
-Using <a href="https://github.com/eduardooviip/Brainfuck-interpreter">Brainfuck Interpreter</a> (EduardooViip)
+Using <a href="ttps://github.com/james1345-1/Brainfuck">Brainfuck Interpreter</a> (James1345)
