@@ -14,6 +14,7 @@ namespace SteamBot_
     class Program
     {
 
+        private static string[] Argument = new string[4];
         private static SteamID steamIDMemory;
 
         private static Dictionary<string, Command> Commands = new Dictionary<string, Command>();
@@ -61,16 +62,27 @@ namespace SteamBot_
         }
         static void ExecuteCommand(string command) {
             Commands[command].action();
+            for (int i = 0; i < Argument.Length; i++) { Argument[i] = String.Empty; }
         }
 
+      
 
         static void Main(string[] args)
         {
 
             //Commands
 
-            CreateCommand("hello", new Action(delegate () {
-                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Hello");
+            CreateCommand("sum", new Action(delegate () {
+                if (!String.IsNullOrWhiteSpace(Argument[0]) && !String.IsNullOrWhiteSpace(Argument[1]))
+                {
+                    int a = int.Parse(Argument[0]);
+                    int b = int.Parse(Argument[1]);
+                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{a}+{b}={a + b}");
+                }
+                else
+                {
+                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error no Arguments");
+                }
             }));
 
             //
@@ -123,10 +135,22 @@ namespace SteamBot_
 
         private static void OnFriendMsg(SteamFriends.FriendMsgCallback obj)
         {
-            if (Commands.ContainsKey(obj.Message))
+            string[] ParamsSepearator = obj.Message.Split(' ');          
+            if (Commands.ContainsKey(ParamsSepearator[0]))
             {
+                for(int i = 1; i < ParamsSepearator.Length; i++)
+                {
+                    for (int a = 0; a < Argument.Length; a++) {
+                        try
+                        {
+                            Argument[a] = ParamsSepearator[i];
+                        }
+                        catch { }
+                        i += 1;
+                    }
+                }
                 steamIDMemory = obj.Sender;
-                ExecuteCommand(obj.Message);
+                ExecuteCommand(ParamsSepearator[0]);
             }
         }
              
