@@ -25,7 +25,11 @@ namespace SteamBot_
 
             mem = new char[30000];
             mp = 0;
-            com = s.ToCharArray();
+            try
+            {
+                com = s.ToCharArray();
+            }
+            catch { Program.sayBrainFuck("Invalid Command Brainfuck"); }
             EOF = com.Length;
 
         }      

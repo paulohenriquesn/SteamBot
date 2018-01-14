@@ -82,13 +82,18 @@ namespace SteamBot_
         {
 
             //Commands
-
-            CreateCommand("@brainfuck", new Action(delegate ()
+            try
             {
-                BrainfuckClient = new Brainfuck(Argument[0]);
-                BrainfuckClient.RunCommand(Argument[0]);
-            }));
 
+                CreateCommand("@brainfuck", new Action(delegate ()
+                {
+                    BrainfuckClient = new Brainfuck(Argument[0]);
+                    BrainfuckClient.RunCommand(Argument[0]);
+                }));
+
+
+            }
+            catch { } // Invalids Commands Ignore!
             
             //
 
