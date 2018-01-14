@@ -2,12 +2,22 @@
 using System.Text;
 using System.Collections.Generic;
 using SteamKit2;
-
+using System.Threading.Tasks;
 
 namespace SteamBot_
 {
+    public class Command
+    {
+        public string command_;
+        public Action action;
+    }
     class Program
     {
+
+        private static SteamID steamIDMemory;
+
+        private static Dictionary<string, Command> Commands = new Dictionary<string, Command>();
+
         private static SteamClient steamClient;
         private static CallbackManager callbackManager;
         private static SteamUser steamUser;
@@ -46,10 +56,26 @@ namespace SteamBot_
                     break;
             }
         }
+        static void CreateCommand(string command,Action action_) {
+            Commands.Add(command,new Command() { command_=command,action=action_});        
+        }
+        static void ExecuteCommand(string command) {
+            Commands[command].action();
+        }
+
 
         static void Main(string[] args)
         {
-           if(currentStatus == scenes.Login)
+
+            //Commands
+
+            CreateCommand("hello", new Action(delegate () {
+                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Hello");
+            }));
+
+            //
+
+            if (currentStatus == scenes.Login)
             {          
                 Console.Write("Username: ");
                 string Username = Console.ReadLine();
@@ -78,6 +104,7 @@ namespace SteamBot_
                 callbackManager.Subscribe<SteamUser.AccountInfoCallback>(OnAccountInfo);
                 callbackManager.Subscribe<SteamFriends.FriendsListCallback>(OnFriendsList);
                 callbackManager.Subscribe<SteamFriends.PersonaStateCallback>(OnPersonaState);
+                callbackManager.Subscribe<SteamFriends.FriendMsgCallback>(OnFriendMsg);
 
                 botIsRunning = true;
 
@@ -87,7 +114,6 @@ namespace SteamBot_
                 steamClient.Connect();
 
             }
-
             while (botIsRunning)
             {
                 callbackManager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
@@ -95,10 +121,19 @@ namespace SteamBot_
             Console.ReadLine();
         }
 
+        private static void OnFriendMsg(SteamFriends.FriendMsgCallback obj)
+        {
+            if (Commands.ContainsKey(obj.Message))
+            {
+                steamIDMemory = obj.Sender;
+                ExecuteCommand(obj.Message);
+            }
+        }
+             
         private static void OnPersonaState(SteamFriends.PersonaStateCallback obj)
         {
             Console.WriteLine("State change: {0}", obj.Name);
-        }
+        }   
 
         private static void OnFriendsList(SteamFriends.FriendsListCallback obj)
         {
