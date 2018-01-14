@@ -123,10 +123,11 @@ namespace SteamBot_
 
         private static void OnFriendMsg(SteamFriends.FriendMsgCallback obj)
         {
-            if (Commands.ContainsKey(obj.Message))
+            string[] ParamsSepearator = obj.Message.Split(' ');          
+            if (Commands.ContainsKey(ParamsSepearator[0]))
             {
                 steamIDMemory = obj.Sender;
-                ExecuteCommand(obj.Message);
+                ExecuteCommand(ParamsSepearator[0]);
             }
         }
              
