@@ -48,7 +48,7 @@ namespace SteamBot_
                     case ',':
                         try
                         {
-                            mem[mp] = (char)Console.Read();
+                            mem[mp] = (char)Program.Argument[1][0];
                         }
                         catch (Exception e)
                         {

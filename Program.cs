@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text.RegularExpressions;
 using SteamKit2;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
+using Newtonsoft.Json.Linq;
 
 namespace SteamBot_
 {
@@ -14,8 +19,9 @@ namespace SteamBot_
     class Program
     {
 
-        private static string[] Argument = new string[4];
+        public static string[] Argument = new string[4];
         private static SteamID steamIDMemory;
+        static  Random random = new Random();
         // public static string[] MemoryTemporary = new string[24];
 
         private static Dictionary<string, Command> Commands = new Dictionary<string, Command>();
@@ -48,6 +54,22 @@ namespace SteamBot_
         }
         private static scenes currentStatus = scenes.Login;
 
+        static string ReadPassword()
+        {
+            StringBuilder pass = new StringBuilder();
+            ConsoleKeyInfo key = Console.ReadKey(true);
+            Console.Write("*");
+            while (key.Key != ConsoleKey.Enter || key.Modifiers > 0)
+            {
+                pass.Append(key.KeyChar);
+                key = Console.ReadKey(true);
+                Console.Write("*");
+            }
+
+            return pass.ToString();
+        }
+
+
         static void ConsoleStatus(statusConsole status, string error_)
         {
             switch (status)
@@ -76,19 +98,59 @@ namespace SteamBot_
             for (int i = 0; i < Argument.Length; i++) { Argument[i] = String.Empty; }
         }
 
-
-
         static void Main(string[] args)
         {
 
-            //Commands
-            try
+            //Commands           
+;            try
             {
-
-                CreateCommand("@brainfuck", new Action(delegate ()
+                CreateCommand("@brainfuck", new Action(delegate()
                 {
                     BrainfuckClient = new Brainfuck(Argument[0]);
                     BrainfuckClient.RunCommand(Argument[0]);
+                }));
+                CreateCommand("@xvideos", new Action(delegate()
+                {
+                    HtmlWeb web = new HtmlWeb();
+                    HtmlAgilityPack.HtmlDocument document = new HtmlDocument();
+                    int numb = new Random().Next(0, 9);
+                    string link = $"https://www.xvideos.com/porn/portugues/{numb}";
+                    document = web.Load(link);
+                    string html = document.DocumentNode.InnerHtml;
+                    string[] videos = html.Split(new []{"\" class=\"thumb-block "}, StringSplitOptions.None);
+                    int randomVideo = new Random().Next(0, videos.Length);
+                    string[] videosRandomSplit = videos[randomVideo].Split(new []{"video_"},StringSplitOptions.None);
+                    string replace = videosRandomSplit[0].Replace("<div id=\"", string.Empty);
+                    string[] _ = replace.Split(new[] {  "id=\"\"" }, StringSplitOptions.None);
+
+                    var id = Regex.Match(_[0], @"xv\.thumbs\.prepareVideo\(([0-9]+)\);").Groups[1].Value;
+                    Console.WriteLine(id);
+                    try
+                    {
+                        string apicomment = $"https://www.xvideos.com/video-get-comments/{id}/0";
+
+                        using (WebClient wc = new WebClient())
+                        {
+                            var json = wc.DownloadString(apicomment);
+                            JObject obj = JObject.Parse(json);
+                            var comments = obj["comments"].Select(x => new
+                            {
+                                name = x["n"].ToString(),
+                                comment = WebUtility.HtmlDecode(x["c"].ToString())
+                            }).ToArray();
+                            if (comments.Length == 0)
+                                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Não achei comentarios.");
+                            else
+                            {
+                                var selected = comments[random.Next(comments.Length)];
+                                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{selected.name} comentou: {selected.comment}");
+                            }
+
+                        }
+
+                    }catch{steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Não achei comentarios.");}
+
+
                 }));
 
 
@@ -103,7 +165,7 @@ namespace SteamBot_
                 string Username = Console.ReadLine();
                 Console.Clear();
                 Console.Write("Password: ");
-                string Password = Console.ReadLine();
+                string Password = ReadPassword();//Console.ReadLine();
 
                 bot = new BOT()
                 {
@@ -132,6 +194,7 @@ namespace SteamBot_
                 botIsRunning = true;
 
                 Console.Clear();
+
 
                 Console.WriteLine($"BOT {bot.name} Connecting to Steam...");
                 steamClient.Connect();
@@ -179,6 +242,7 @@ namespace SteamBot_
                 {
 
                     steamFriends.AddFriend(friend.SteamID);
+                   
                 }
             }
         }
