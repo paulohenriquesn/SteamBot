@@ -22,7 +22,6 @@ namespace SteamBot_
         public static string[] Argument = new string[4];
         private static SteamID steamIDMemory;
         static  Random random = new Random();
-        // public static string[] MemoryTemporary = new string[24];
 
         private static Dictionary<string, Command> Commands = new Dictionary<string, Command>();
 
@@ -124,7 +123,6 @@ namespace SteamBot_
                     string[] _ = replace.Split(new[] {  "id=\"\"" }, StringSplitOptions.None);
 
                     var id = Regex.Match(_[0], @"xv\.thumbs\.prepareVideo\(([0-9]+)\);").Groups[1].Value;
-                    Console.WriteLine(id);
                     try
                     {
                         string apicomment = $"https://www.xvideos.com/video-get-comments/{id}/0";
