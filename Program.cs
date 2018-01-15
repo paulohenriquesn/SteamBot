@@ -110,9 +110,9 @@ namespace SteamBot_
                 }));
                 CreateCommand("@xvideos", new Action(delegate ()
                 {
-                    restart:
                     steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
                         "perae estou procurando um comentario...");
+                    restart:
                     HtmlWeb web = new HtmlWeb();
                     HtmlAgilityPack.HtmlDocument document = new HtmlDocument();
                     int numb = random.Next(0, 100);
