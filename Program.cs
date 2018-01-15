@@ -108,7 +108,7 @@ namespace SteamBot_
                     BrainfuckClient = new Brainfuck(Argument[0]);
                     BrainfuckClient.RunCommand(Argument[0]);
                 }));
-                CreateCommand("@xvideos", new Action(delegate ()
+                CreateCommand("@xvideos", new Action(delegate () // @ihavenonickname credits of the idea -> https://github.com/ihavenonickname/bot-telegram-comentarios-xvideos
                 {
                     steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
                         "perae estou procurando um comentario...");
