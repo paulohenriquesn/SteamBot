@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace SteamBot_
 
         public static string[] Argument = new string[4];
         private static SteamID steamIDMemory;
-        static  Random random = new Random();
+        static Random random = new Random();
 
         private static Dictionary<string, Command> Commands = new Dictionary<string, Command>();
 
@@ -101,26 +101,26 @@ namespace SteamBot_
         {
 
             //Commands           
-;            try
+            ; try
             {
-                CreateCommand("@brainfuck", new Action(delegate()
+                CreateCommand("@brainfuck", new Action(delegate ()
                 {
                     BrainfuckClient = new Brainfuck(Argument[0]);
                     BrainfuckClient.RunCommand(Argument[0]);
                 }));
-                CreateCommand("@xvideos", new Action(delegate()
+                CreateCommand("@xvideos", new Action(delegate ()
                 {
                     HtmlWeb web = new HtmlWeb();
                     HtmlAgilityPack.HtmlDocument document = new HtmlDocument();
-                    int numb = new Random().Next(0, 9);
+                    int numb = random.Next(0, 100);
                     string link = $"https://www.xvideos.com/porn/portugues/{numb}";
                     document = web.Load(link);
                     string html = document.DocumentNode.InnerHtml;
-                    string[] videos = html.Split(new []{"\" class=\"thumb-block "}, StringSplitOptions.None);
-                    int randomVideo = new Random().Next(0, videos.Length);
-                    string[] videosRandomSplit = videos[randomVideo].Split(new []{"video_"},StringSplitOptions.None);
+                    string[] videos = html.Split(new[] { "\" class=\"thumb-block " }, StringSplitOptions.None);
+                    int randomVideo = random.Next(0, videos.Length);
+                    string[] videosRandomSplit = videos[randomVideo].Split(new[] { "video_" }, StringSplitOptions.None);
                     string replace = videosRandomSplit[0].Replace("<div id=\"", string.Empty);
-                    string[] _ = replace.Split(new[] {  "id=\"\"" }, StringSplitOptions.None);
+                    string[] _ = replace.Split(new[] { "id=\"\"" }, StringSplitOptions.None);
 
                     var id = Regex.Match(_[0], @"xv\.thumbs\.prepareVideo\(([0-9]+)\);").Groups[1].Value;
                     try
@@ -146,7 +146,8 @@ namespace SteamBot_
 
                         }
 
-                    }catch{steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Não achei comentarios.");}
+                    }
+                    catch { steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Não achei comentarios."); }
 
 
                 }));
@@ -154,7 +155,7 @@ namespace SteamBot_
 
             }
             catch { } // Invalids Commands Ignore!
-            
+
             //
 
             if (currentStatus == scenes.Login)
@@ -240,7 +241,7 @@ namespace SteamBot_
                 {
 
                     steamFriends.AddFriend(friend.SteamID);
-                   
+
                 }
             }
         }
