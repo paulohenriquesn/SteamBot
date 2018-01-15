@@ -110,6 +110,9 @@ namespace SteamBot_
                 }));
                 CreateCommand("@xvideos", new Action(delegate ()
                 {
+                    restart:
+                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
+                        "perae estou procurando um comentario...");
                     HtmlWeb web = new HtmlWeb();
                     HtmlAgilityPack.HtmlDocument document = new HtmlDocument();
                     int numb = random.Next(0, 100);
@@ -137,17 +140,21 @@ namespace SteamBot_
                                 comment = WebUtility.HtmlDecode(x["c"].ToString())
                             }).ToArray();
                             if (comments.Length == 0)
-                                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Não achei comentarios.");
+                                goto restart;
                             else
                             {
                                 var selected = comments[random.Next(comments.Length)];
-                                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{selected.name} comentou: {selected.comment}");
+                                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
+                                    $"{selected.name} comentou: {selected.comment}");
                             }
 
                         }
 
                     }
-                    catch { steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Não achei comentarios."); }
+                    catch
+                    {
+                        goto restart;
+                    }
 
 
                 }));
