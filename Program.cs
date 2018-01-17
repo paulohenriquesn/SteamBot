@@ -8,6 +8,23 @@ using SteamKit2;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
+using System.Threading;
+using VistaDB.Entity;
+using Dapper;
+using SteamKit2.Unified.Internal;
+using VistaDB.Provider;
+
+
+/*
+create table rpg_users(
+ID int,
+Level int,
+Exp_ int,
+Class varchar(350),
+UName varchar(350)
+);
+*/
+
 
 namespace SteamBot_
 {
@@ -18,6 +35,11 @@ namespace SteamBot_
     }
     class Program
     {
+
+        private static List<SteamID> ListPlayingGame = new List<SteamID>();
+        private static int CountToAddExp = 0;
+        private static VistaDBConnection dbConnection = new VistaDBConnection(@"Data source='C:\Users\Paulo Henrique\OneDrive\databases\steambot.vdb5'");
+        private static List<SteamID> listFriendsSteamID = new List<SteamID>();
 
         public static string[] Argument = new string[4];
         private static SteamID steamIDMemory;
@@ -99,7 +121,7 @@ namespace SteamBot_
 
         static void Main(string[] args)
         {
-
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             //Commands           
             ; try
             {
@@ -108,7 +130,7 @@ namespace SteamBot_
                     BrainfuckClient = new Brainfuck(Argument[0]);
                     BrainfuckClient.RunCommand(Argument[0]);
                 }));
-                CreateCommand("@xvideos", new Action(delegate () // @ihavenonickname credits of the idea -> https://github.com/ihavenonickname/bot-telegram-comentarios-xvideos
+                CreateCommand("@xvideos", new Action(delegate ()
                 {
                     steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
                         "perae estou procurando um comentario...");
@@ -158,11 +180,52 @@ namespace SteamBot_
 
 
                 }));
+                CreateCommand("@friends", new Action(delegate()
+                {
+                    for (int i = 0; i < listFriendsSteamID.Count; i++)
+                    {
+                        Thread.Sleep(15);
+                        steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, steamFriends.GetFriendPersonaName(listFriendsSteamID[i]));                             
+                    }
+                }));
+                CreateCommand("@rpg", new Action(delegate()
+                {
+                    Check:
+                    var account = dbConnection.Query("SELECT * from rpg_users WHERE id=@myid",new {myid = steamIDMemory.AccountID}).FirstOrDefault();
+                    if (account != null)
+                    {
 
+                        steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Name: {account.UName}");
+                        steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Class: {account.Class}");
+                        steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Level: {account.Level}");
+                        steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Exp: {account.Exp_}/15");
+                            
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var CreateAccount = dbConnection.Query(
+                                "INSERT INTO rpg_users(ID,Level,Exp_,Class,UName) VALUES (@id,@level,@exp,@class_,@uname)",
+                                new
+                                {
+                                    id = steamIDMemory.AccountID,
+                                    level = 0,
+                                    exp = 0,
+                                    class_ = "Archer",
+                                    uname = steamFriends.GetFriendPersonaName(steamIDMemory)
+                                });
+                            Thread.Sleep(30);
+                            goto Check;
+                        }catch{ steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error to create your account.");}
+                    }
+                        
+                    steamIDMemory = null;
 
+                }));
             }
             catch { } // Invalids Commands Ignore!
-
+                
             //
 
             if (currentStatus == scenes.Login)
@@ -196,7 +259,7 @@ namespace SteamBot_
                 callbackManager.Subscribe<SteamFriends.FriendsListCallback>(OnFriendsList);
                 callbackManager.Subscribe<SteamFriends.PersonaStateCallback>(OnPersonaState);
                 callbackManager.Subscribe<SteamFriends.FriendMsgCallback>(OnFriendMsg);
-
+               
                 botIsRunning = true;
 
                 Console.Clear();
@@ -209,12 +272,41 @@ namespace SteamBot_
             while (botIsRunning)
             {
                 callbackManager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
+                CountToAddExp += 1;
+                if (CountToAddExp >= 100)
+                {
+                    CountToAddExp = 0;
+                    for(int i=0;i<ListPlayingGame.Count;i++)
+                    {
+                        if (ListPlayingGame.Count > 0)
+                        {
+                            var QueryToAdd = dbConnection.Query("UPDATE rpg_users set Exp_ = Exp_ + 1 WHERE id=@myid",
+                                new {myid = ListPlayingGame[i].AccountID});
+                            var SelectCheck = dbConnection.Query("SELECT * FROM rpg_users WHERE id=@myid",
+                                new {myid = ListPlayingGame[i].AccountID}).FirstOrDefault();
+
+                            if (SelectCheck != null && SelectCheck.Exp_ >= 15)
+                            {
+                                var AddLevel = dbConnection.Query(
+                                    "UPDATE rpg_users set Level = Level + 1 WHERE id=@myid",
+                                    new {myid = ListPlayingGame[i].AccountID});
+                                var RemoveExp = dbConnection.Query("UPDATE rpg_users set Exp_ = 0 WHERE id=@myid",
+                                    new {myid = ListPlayingGame[i].AccountID});
+                                steamFriends.SendChatMessage(ListPlayingGame[i],EChatEntryType.ChatMsg,"[RPG] You have reached a new Level");
+
+                            }
+
+                        }
+
+                    }
+                }
             }
             Console.ReadLine();
         }
 
         private static void OnFriendMsg(SteamFriends.FriendMsgCallback obj)
         {
+            
             string[] ParamsSepearator = obj.Message.Split(' ');
             if (Commands.ContainsKey(ParamsSepearator[0]))
             {
@@ -237,6 +329,17 @@ namespace SteamBot_
 
         private static void OnPersonaState(SteamFriends.PersonaStateCallback obj)
         {
+            if (obj.State != EPersonaState.Offline)
+            {
+                ListPlayingGame.Add(obj.FriendID);
+            }
+            else
+            {
+                if(ListPlayingGame.Contains(obj.FriendID))
+                    ListPlayingGame.Remove(obj.FriendID);
+            }
+
+
             Console.WriteLine("State change: {0}", obj.Name);
         }
 
@@ -244,6 +347,12 @@ namespace SteamBot_
         {
             foreach (var friend in obj.FriendList)
             {
+                if (friend.Relationship == EFriendRelationship.Friend)
+                {
+                    if(!listFriendsSteamID.Contains(friend.SteamID))
+                        listFriendsSteamID.Add(friend.SteamID);
+                    
+                }
                 if (friend.Relationship == EFriendRelationship.RequestRecipient)
                 {
 
