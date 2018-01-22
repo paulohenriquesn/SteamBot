@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using System.Threading;
-using VistaDB.Entity;
 using Dapper;
 using SteamKit2.Unified.Internal;
 using VistaDB.Provider;
@@ -222,6 +221,28 @@ namespace SteamBot_
                         
                     steamIDMemory = null;
 
+                }));
+                CreateCommand("@temp", new Action(delegate ()
+                {
+                    using (WebClient wc = new WebClient())
+                    {
+                        try
+                        {
+                            var json = wc.DownloadString($@"https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22{Argument[0]}%22)%20and%20u%3D%22c%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys");
+                            JObject obj = JObject.Parse(json);
+                            var obj_ = obj["query"]["results"]["channel"]["item"].Select(x => new
+                            {
+                                temp = float.Parse(obj["query"]["results"]["channel"]["item"]["condition"]["temp"].ToString()),
+                                title = obj["query"]["results"]["channel"]["item"]["title"]
+                            }).ToArray();
+                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{obj_[0].title}");
+                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Temperature: {obj_[0].temp} ºC");
+                        }
+                        catch
+                        {
+                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error to get temperature from this local.");
+                        }
+                    }
                 }));
             }
             catch { } // Invalids Commands Ignore!
