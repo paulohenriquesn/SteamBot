@@ -244,6 +244,50 @@ namespace SteamBot_
                         }
                     }
                 }));
+                CreateCommand("@bitcoin", new Action(delegate ()
+                {
+                    using (WebClient wc = new WebClient())
+                    {
+                        try
+                        {
+                            var json = wc.DownloadString("https://blockchain.info/pt/ticker");
+                            JObject obj = JObject.Parse(json);
+                            var price = obj[Argument[0]]["15m"];
+                            var symbol = obj[Argument[0]]["symbol"];
+                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Price Bitcoin from {Argument[0]}: {price} {symbol}");
+                        }
+                        catch { steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error to get price bitcoin from {Argument[0]}"); }
+                    }
+
+                }));
+                CreateCommand("@math", new Action(delegate ()
+                 {
+                     using(WebClient wc = new WebClient())
+                     {
+                         try
+                         {
+                             var json = wc.DownloadString($"https://newton.now.sh/factor/{Argument[0]}");
+                             JObject obj = JObject.Parse(json);
+                             var obj_ = obj["result"];
+                             steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{obj_}");
+                         }
+                         catch { steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error to expression {Argument[0]}"); }
+                     };
+                 }));
+                CreateCommand("@qrcode", new Action(delegate ()
+                {
+                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={Argument[0]}");
+                }));                
+                CreateCommand("@help", new Action(delegate ()
+                 {
+                     var KeysCommands = Commands.Keys.ToArray();
+                     steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "==============================");
+                     for (int i = 0; i < KeysCommands.Length; i++)
+                     {
+                         steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, KeysCommands[i]);
+                     }
+                     steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "==============================");
+                 }));
             }
             catch { } // Invalids Commands Ignore!
                 
