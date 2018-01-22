@@ -266,7 +266,7 @@ namespace SteamBot_
                      {
                          try
                          {
-                             var json = wc.DownloadString($"https://newton.now.sh/factor/{Argument[0]}");
+                             var json = wc.DownloadString($"https://newton.now.sh/simplify/{Argument[0]}");
                              JObject obj = JObject.Parse(json);
                              var obj_ = obj["result"];
                              steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{obj_}");
