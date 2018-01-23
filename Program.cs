@@ -312,6 +312,13 @@ namespace SteamBot_
 
 
                          }
+                         if(Argument[0] == "list")
+                         {
+                             for(int i = 0; i < Rooms.Count; i++)
+                             {
+                                 steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,Rooms[i].CodeRoom);
+                             }
+                         }
                          if (Argument[0] == "join")
                          {
                              if (Rooms_dic.Values.Contains(int.Parse(Argument[1])))
@@ -347,7 +354,8 @@ namespace SteamBot_
                                  {
                                      if (Rooms[i].OwnerRoom == steamIDMemory)
                                      {
-                                         Rooms.RemoveAt(i);
+                                         Rooms_dic.Remove(Rooms[i].CodeRoom);
+                                         Rooms.RemoveAt(i);                                         
                                          steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Sucess to remove room!");
                                      }
                                  }
