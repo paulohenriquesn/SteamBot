@@ -27,6 +27,14 @@ UName varchar(350)
 
 namespace SteamBot_
 {
+    public class RoomBehaviour
+    {
+        public int RoomID { get; set; }
+        public string CodeRoom { get; set; }
+        public SteamID OwnerRoom { get; set; }
+        public List<SteamID> UsersRoom = new List<SteamID>();
+    }
+
     public class Command
     {
         public string command_;
@@ -34,6 +42,8 @@ namespace SteamBot_
     }
     class Program
     {
+        private static List<RoomBehaviour> Rooms = new List<RoomBehaviour>();
+        private static Dictionary<string, int> Rooms_dic = new Dictionary<string, int>();
 
         private static List<SteamID> ListPlayingGame = new List<SteamID>();
         private static int CountToAddExp = 0;
@@ -287,6 +297,77 @@ namespace SteamBot_
                          steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, KeysCommands[i]);
                      }
                      steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "==============================");
+                 }));
+                CreateCommand("@room", new Action(delegate ()
+                 {
+                     try
+                     {
+                         if (Argument[0] == "create")
+                         {
+                             RoomBehaviour room_ = new RoomBehaviour() { OwnerRoom = steamIDMemory, RoomID = steamIDMemory.GetHashCode(), CodeRoom = Argument[1] };
+                             room_.UsersRoom.Add(steamIDMemory);
+                             Rooms_dic.Add(steamIDMemory.GetHashCode().ToString(), int.Parse(Argument[1]));
+                             Rooms.Add(room_);
+                             steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Sucess to create room! id: {Argument[1]}");
+
+
+                         }
+                         if (Argument[0] == "join")
+                         {
+                             if (Rooms_dic.Values.Contains(int.Parse(Argument[1])))
+                             {
+                                 for (int i = 0; i < Rooms.Count; i++)
+                                 {
+                                     if (Rooms[i].CodeRoom == Argument[1])
+                                     {
+                                         Rooms[i].UsersRoom.Add(steamIDMemory);
+                                         steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Sucess to join in room!");
+                                     }
+                                 }
+                             }
+                         }
+
+                         if (Argument[0] == "leave")
+                         {
+                             for (int i = 0; i < Rooms.Count; i++)
+                             {
+                                 if (Rooms[i].UsersRoom.Contains(steamIDMemory))
+                                 {
+                                     Rooms[i].UsersRoom.Remove(steamIDMemory);
+                                     steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Sucess leave to room!");
+                                 }
+                             }
+                         }
+
+                         if (Argument[0] == "remove")
+                         {
+                             if (Rooms_dic.Values.Contains(int.Parse(Argument[1])))
+                             {
+                                 for (int i = 0; i < Rooms.Count; i++)
+                                 {
+                                     if (Rooms[i].OwnerRoom == steamIDMemory)
+                                     {
+                                         Rooms.RemoveAt(i);
+                                     }
+                                 }
+                             }
+                             else { steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Room not found!"); }
+                         }
+                         if (Argument[0] == "say")
+                         {
+                             for (int i = 0; i < Rooms.Count; i++)
+                             {
+                                 if (Rooms[i].UsersRoom.Contains(steamIDMemory))
+                                 {
+                                     for (int a = 0; a < Rooms[i].UsersRoom.Count; a++)
+                                     {
+                                         steamFriends.SendChatMessage(Rooms[i].UsersRoom[a], EChatEntryType.ChatMsg, $"{steamFriends.GetFriendPersonaName(steamIDMemory)}: {Argument[1]}");
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                     catch { steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error to execute command"); }
                  }));
             }
             catch { } // Invalids Commands Ignore!
