@@ -50,7 +50,7 @@ namespace SteamBot_
         private static VistaDBConnection dbConnection = new VistaDBConnection(@"Data source='C:\Users\Paulo Henrique\OneDrive\databases\steambot.vdb5'");
         private static List<SteamID> listFriendsSteamID = new List<SteamID>();
 
-        public static string[] Argument = new string[4];
+        public static string[] Argument = new string[128];
         private static SteamID steamIDMemory;
         static Random random = new Random();
 
@@ -356,13 +356,25 @@ namespace SteamBot_
                          }
                          if (Argument[0] == "say")
                          {
+                             string msg = String.Empty;
                              for (int i = 0; i < Rooms.Count; i++)
                              {
                                  if (Rooms[i].UsersRoom.Contains(steamIDMemory))
                                  {
                                      for (int a = 0; a < Rooms[i].UsersRoom.Count; a++)
                                      {
-                                         steamFriends.SendChatMessage(Rooms[i].UsersRoom[a], EChatEntryType.ChatMsg, $"{steamFriends.GetFriendPersonaName(steamIDMemory)}: {Argument[1]}");
+                                         for (int c = 1; c < Argument.Length; c++)
+                                         {
+                                             try
+                                             {
+                                                 if (!String.IsNullOrWhiteSpace(Argument[c]))
+                                                 {
+                                                     msg = msg + " " + Argument[c];
+                                                 }
+                                             }
+                                             catch { }
+                                         }
+                                         steamFriends.SendChatMessage(Rooms[i].UsersRoom[a], EChatEntryType.ChatMsg, $"{steamFriends.GetFriendPersonaName(steamIDMemory)}: {msg}");                                      
                                      }
                                  }
                              }
