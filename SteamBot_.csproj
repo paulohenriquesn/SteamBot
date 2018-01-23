@@ -6,9 +6,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="1.50.4" />
     <PackageReference Include="HtmlAgilityPack" Version="1.6.13" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1-beta3" />
     <PackageReference Include="SteamKit2" Version="2.0.0" />
+    <PackageReference Include="System.Text.Encoding" Version="4.3.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="VistaDB.5.Loupe.NET20">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Gibraltar Software\VistaDB 5\Redist\NET20\VistaDB.5.Loupe.NET20.dll</HintPath>
+    </Reference>
+    <Reference Include="VistaDB.5.NET20">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Gibraltar Software\VistaDB 5\Redist\NET20\VistaDB.5.NET20.dll</HintPath>
+    </Reference>
+    <Reference Include="VistaDB.5.Web.NET20">
+      <HintPath>..\..\..\..\..\Program Files (x86)\Gibraltar Software\VistaDB 5\Redist\NET20\VistaDB.5.Web.NET20.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

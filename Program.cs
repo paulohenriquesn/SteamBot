@@ -12,6 +12,7 @@ using System.Threading;
 using Dapper;
 using SteamKit2.Unified.Internal;
 using VistaDB.Provider;
+using System.IO;
 
 
 /*
@@ -42,6 +43,7 @@ namespace SteamBot_
     }
     class Program
     {
+        private static string[] memory_ = new string[2] { String.Empty,String.Empty };
         private static List<RoomBehaviour> Rooms = new List<RoomBehaviour>();
         private static Dictionary<string, int> Rooms_dic = new Dictionary<string, int>();
 
@@ -246,7 +248,7 @@ namespace SteamBot_
                                 title = obj["query"]["results"]["channel"]["item"]["title"]
                             }).ToArray();
                             steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{obj_[0].title}");
-                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Temperature: {obj_[0].temp} ÂºC");
+                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Temperature: {obj_[0].temp} ºC");
                         }
                         catch
                         {
@@ -402,44 +404,64 @@ namespace SteamBot_
 
             if (currentStatus == scenes.Login)
             {
-                Console.Write("Username: ");
-                string Username = Console.ReadLine();
-                Console.Clear();
-                Console.Write("Password: ");
-                string Password = ReadPassword();//Console.ReadLine();
-
-                bot = new BOT()
+                using (StreamReader r = new StreamReader("SteamBot.json"))
                 {
-                    name = Username,
-                    password = Password
-                };
-                currentStatus = scenes.TryingConnect;
+                    string json_data = r.ReadToEnd();
+                    JObject bot_data = JObject.Parse(json_data);
+                    if (bot_data["bot_data"]["autologin"].ToString() != "true")
+                    {
+                        Console.Write("Username: ");
+                        string Username = Console.ReadLine();
+                        Console.Clear();
+                        Console.Write("Password: ");
+                        string Password = ReadPassword();//Console.ReadLine();
 
+                        bot = new BOT()
+                        {
+                            name = Username,
+                            password = Password,
+                            personaname = bot_data["bot_data"]["bot_name"].ToString()
+                        };
+                        memory_[0] = bot_data["bot_data"]["bot_name"].ToString();
+                        currentStatus = scenes.TryingConnect;
+                    }
+                    else
+                    {
+                        bot = new BOT()
+                        {
+                            name = bot_data["bot_login"]["bot_user"].ToString(),
+                            password = bot_data["bot_login"]["bot_password"].ToString(),
+                            personaname = bot_data["bot_data"]["bot_name"].ToString()
+                        };
+                        memory_[0] = bot_data["bot_data"]["bot_name"].ToString();
+                        currentStatus = scenes.TryingConnect;
+                    }
+                }
             }
-            if (currentStatus == scenes.TryingConnect)
-            {
-                steamClient = new SteamClient();
-                callbackManager = new CallbackManager(steamClient);
-                steamUser = steamClient.GetHandler<SteamUser>();
-                steamFriends = steamClient.GetHandler<SteamFriends>();
+                if (currentStatus == scenes.TryingConnect)
+                {
+                    steamClient = new SteamClient();
+                    callbackManager = new CallbackManager(steamClient);
+                    steamUser = steamClient.GetHandler<SteamUser>();
+                    steamFriends = steamClient.GetHandler<SteamFriends>();
 
-                callbackManager.Subscribe<SteamClient.ConnectedCallback>(onConnected);
-                callbackManager.Subscribe<SteamClient.DisconnectedCallback>(OnDisconnected);
-                callbackManager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
-                callbackManager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
-                callbackManager.Subscribe<SteamUser.AccountInfoCallback>(OnAccountInfo);
-                callbackManager.Subscribe<SteamFriends.FriendsListCallback>(OnFriendsList);
-                callbackManager.Subscribe<SteamFriends.PersonaStateCallback>(OnPersonaState);
-                callbackManager.Subscribe<SteamFriends.FriendMsgCallback>(OnFriendMsg);
-               
-                botIsRunning = true;
+                    callbackManager.Subscribe<SteamClient.ConnectedCallback>(onConnected);
+                    callbackManager.Subscribe<SteamClient.DisconnectedCallback>(OnDisconnected);
+                    callbackManager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
+                    callbackManager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
+                    callbackManager.Subscribe<SteamUser.AccountInfoCallback>(OnAccountInfo);
+                    callbackManager.Subscribe<SteamFriends.FriendsListCallback>(OnFriendsList);
+                    callbackManager.Subscribe<SteamFriends.PersonaStateCallback>(OnPersonaState);
+                    callbackManager.Subscribe<SteamFriends.FriendMsgCallback>(OnFriendMsg);
 
-                Console.Clear();
+                    botIsRunning = true;
+
+                    Console.Clear();
 
 
-                Console.WriteLine($"BOT {bot.name} Connecting to Steam...");
-                steamClient.Connect();
-
+                    Console.WriteLine($"BOT {bot.name} Connecting to Steam...");
+                    steamClient.Connect();
+                
             }
             while (botIsRunning)
             {
@@ -554,6 +576,7 @@ namespace SteamBot_
             }
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"BOT {bot.name} Successfully logged on!");
+            steamFriends.SetPersonaName(memory_[0]);
             Console.ResetColor();
             currentStatus = scenes.Running;
         }

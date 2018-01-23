@@ -1,0 +1,10 @@
+{
+	"bot_data": {
+		"autologin": "false",
+		"bot_name": "BOT_Test"
+	},
+	"bot_login": {
+		"bot_user": null,
+		"bot_password": null
+	}
+}
