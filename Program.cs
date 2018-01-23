@@ -352,9 +352,14 @@ namespace SteamBot_
                              {
                                  for (int i = 0; i < Rooms.Count; i++)
                                  {
+                                     for (int x = 0; x < Rooms[i].UsersRoom.Count; x++)
+                                     {
+                                         Rooms[i].UsersRoom.RemoveAt(x);
+                                     }
+                                     
                                      if (Rooms[i].OwnerRoom == steamIDMemory)
                                      {
-                                         Rooms_dic.Remove(Rooms[i].CodeRoom);
+                                         Rooms_dic.Remove(steamIDMemory.GetHashCode().ToString());
                                          Rooms.RemoveAt(i);                                         
                                          steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Sucess to remove room!");
                                      }
@@ -388,7 +393,7 @@ namespace SteamBot_
                              }
                          }
                      }
-                     catch { steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error to execute command"); }
+                     catch (Exception ex) { steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error to execute command in room!"); }
                  }));
             }
             catch { } // Invalids Commands Ignore!
