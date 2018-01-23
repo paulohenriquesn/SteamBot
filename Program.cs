@@ -348,6 +348,7 @@ namespace SteamBot_
                                      if (Rooms[i].OwnerRoom == steamIDMemory)
                                      {
                                          Rooms.RemoveAt(i);
+                                         steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Sucess to remove room!");
                                      }
                                  }
                              }
