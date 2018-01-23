@@ -152,13 +152,7 @@ namespace SteamBot_
                     string link = $"https://www.xvideos.com/porn/portugues/{numb}";
                     document = web.Load(link);
                     string html = document.DocumentNode.InnerHtml;
-                    string[] videos = html.Split(new[] { "\" class=\"thumb-block " }, StringSplitOptions.None);
-                    int randomVideo = random.Next(0, videos.Length);
-                    string[] videosRandomSplit = videos[randomVideo].Split(new[] { "video_" }, StringSplitOptions.None);
-                    string replace = videosRandomSplit[0].Replace("<div id=\"", string.Empty);
-                    string[] _ = replace.Split(new[] { "id=\"\"" }, StringSplitOptions.None);
-
-                    var id = Regex.Match(_[0], @"xv\.thumbs\.prepareVideo\(([0-9]+)\);").Groups[1].Value;
+                    var id = Regex.Match(html, @"xv\.thumbs\.prepareVideo\(([0-9]+)\);").Groups[1].Value;
                     try
                     {
                         string apicomment = $"https://www.xvideos.com/video-get-comments/{id}/0";
@@ -248,7 +242,7 @@ namespace SteamBot_
                                 title = obj["query"]["results"]["channel"]["item"]["title"]
                             }).ToArray();
                             steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{obj_[0].title}");
-                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Temperature: {obj_[0].temp} ºC");
+                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Temperature: {obj_[0].temp} ÂºC");
                         }
                         catch
                         {
