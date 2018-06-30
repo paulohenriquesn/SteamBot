@@ -28,6 +28,7 @@ UName varchar(350)
 
 namespace SteamBot_
 {
+
     public class RoomBehaviour
     {
         public int RoomID { get; set; }
@@ -43,7 +44,7 @@ namespace SteamBot_
     }
     class Program
     {
-        private static string[] memory_ = new string[2] { String.Empty,String.Empty };
+        private static string[] memory_ = new string[2] { String.Empty, String.Empty };
         private static List<RoomBehaviour> Rooms = new List<RoomBehaviour>();
         private static Dictionary<string, int> Rooms_dic = new Dictionary<string, int>();
 
@@ -143,60 +144,76 @@ namespace SteamBot_
                 }));
                 CreateCommand("@xvideos", new Action(delegate ()
                 {
-                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
-                        "perae estou procurando um comentario...");
-                    restart:
+                int timer = 0;
+                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
+                    "perae estou procurando um comentario...");
+            restart:
+                timer += 1;
+                if (timer <= 15)
+                {
                     HtmlWeb web = new HtmlWeb();
                     HtmlAgilityPack.HtmlDocument document = new HtmlDocument();
                     int numb = random.Next(0, 100);
-                    string link = $"https://www.xvideos.com/porn/portugues/{numb}";
+                    string link = $"https://www.xvideos.com/lang/portugues/{numb}";
                     document = web.Load(link);
                     string html = document.DocumentNode.InnerHtml;
                     var id = Regex.Match(html, @"xv\.thumbs\.prepareVideo\(([0-9]+)\);").Groups[1].Value;
-                    try
-                    {
-                        string apicomment = $"https://www.xvideos.com/video-get-comments/{id}/0";
-
-                        using (WebClient wc = new WebClient())
+                        if (string.IsNullOrEmpty(id))
                         {
-                            var json = wc.DownloadString(apicomment);
-                            JObject obj = JObject.Parse(json);
-                            var comments = obj["comments"].Select(x => new
+                            goto restart;
+                        }
+                        
+                        try
+                        {
+    
+                            string apicomment = $"https://www.xvideos.com/video-get-comments/{id}/0/";
+
+                            using (WebClient wc = new WebClient())
                             {
-                                name = x["n"].ToString(),
-                                comment = WebUtility.HtmlDecode(x["c"].ToString())
-                            }).ToArray();
-                            if (comments.Length == 0)
-                                goto restart;
-                            else
-                            {
-                                var selected = comments[random.Next(comments.Length)];
-                                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
-                                    $"{selected.name} comentou: {selected.comment}");
+                                var json = wc.DownloadString(apicomment);
+                                JObject obj = JObject.Parse(json);
+                                var comments = obj["comments"].Select(x => new
+                                {
+                                    name = x["n"].ToString(),
+                                    comment = WebUtility.HtmlDecode(x["c"].ToString())
+                                }).ToArray();
+                                if (comments.Length == 0)
+                                    goto restart;
+                                else
+                                {
+                                    var selected = comments[random.Next(comments.Length)];
+                                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
+                                        $"{selected.name} comentou: {selected.comment}");
+                                }
+
                             }
 
                         }
-
+                        catch
+                        {
+                            goto restart;
+                        }
                     }
-                    catch
+                    else
                     {
-                        goto restart;
+                        steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
+                                        $"não achei comentarios :(");
                     }
 
 
                 }));
-                CreateCommand("@friends", new Action(delegate()
+                CreateCommand("@friends", new Action(delegate ()
                 {
                     for (int i = 0; i < listFriendsSteamID.Count; i++)
                     {
                         Thread.Sleep(15);
-                        steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, steamFriends.GetFriendPersonaName(listFriendsSteamID[i]));                             
+                        steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, steamFriends.GetFriendPersonaName(listFriendsSteamID[i]));
                     }
                 }));
-                CreateCommand("@rpg", new Action(delegate()
+                CreateCommand("@rpg", new Action(delegate ()
                 {
-                    Check:
-                    var account = dbConnection.Query("SELECT * from rpg_users WHERE id=@myid",new {myid = steamIDMemory.AccountID}).FirstOrDefault();
+                Check:
+                    var account = dbConnection.Query("SELECT * from rpg_users WHERE id=@myid", new { myid = steamIDMemory.AccountID }).FirstOrDefault();
                     if (account != null)
                     {
 
@@ -204,7 +221,7 @@ namespace SteamBot_
                         steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Class: {account.Class}");
                         steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Level: {account.Level}");
                         steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Exp: {account.Exp_}/15");
-                            
+
                     }
                     else
                     {
@@ -222,9 +239,10 @@ namespace SteamBot_
                                 });
                             Thread.Sleep(30);
                             goto Check;
-                        }catch{ steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error to create your account.");}
+                        }
+                        catch { steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"Error to create your account."); }
                     }
-                        
+
                     steamIDMemory = null;
 
                 }));
@@ -268,7 +286,7 @@ namespace SteamBot_
                 }));
                 CreateCommand("@math", new Action(delegate ()
                  {
-                     using(WebClient wc = new WebClient())
+                     using (WebClient wc = new WebClient())
                      {
                          try
                          {
@@ -283,7 +301,7 @@ namespace SteamBot_
                 CreateCommand("@qrcode", new Action(delegate ()
                 {
                     steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={Argument[0]}");
-                }));                
+                }));
                 CreateCommand("@help", new Action(delegate ()
                  {
                      var KeysCommands = Commands.Keys.ToArray();
@@ -308,11 +326,11 @@ namespace SteamBot_
 
 
                          }
-                         if(Argument[0] == "list")
+                         if (Argument[0] == "list")
                          {
-                             for(int i = 0; i < Rooms.Count; i++)
+                             for (int i = 0; i < Rooms.Count; i++)
                              {
-                                 steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,Rooms[i].CodeRoom);
+                                 steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, Rooms[i].CodeRoom);
                              }
                          }
                          if (Argument[0] == "join")
@@ -352,11 +370,11 @@ namespace SteamBot_
                                      {
                                          Rooms[i].UsersRoom.RemoveAt(x);
                                      }
-                                     
+
                                      if (Rooms[i].OwnerRoom == steamIDMemory)
                                      {
                                          Rooms_dic.Remove(steamIDMemory.GetHashCode().ToString());
-                                         Rooms.RemoveAt(i);                                         
+                                         Rooms.RemoveAt(i);
                                          steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "Sucess to remove room!");
                                      }
                                  }
@@ -383,7 +401,7 @@ namespace SteamBot_
                                              }
                                              catch { }
                                          }
-                                         steamFriends.SendChatMessage(Rooms[i].UsersRoom[a], EChatEntryType.ChatMsg, $"{steamFriends.GetFriendPersonaName(steamIDMemory)}: {msg}");                                      
+                                         steamFriends.SendChatMessage(Rooms[i].UsersRoom[a], EChatEntryType.ChatMsg, $"{steamFriends.GetFriendPersonaName(steamIDMemory)}: {msg}");
                                      }
                                  }
                              }
@@ -393,7 +411,7 @@ namespace SteamBot_
                  }));
             }
             catch { } // Invalids Commands Ignore!
-                
+
             //
 
             if (currentStatus == scenes.Login)
@@ -432,30 +450,30 @@ namespace SteamBot_
                     }
                 }
             }
-                if (currentStatus == scenes.TryingConnect)
-                {
-                    steamClient = new SteamClient();
-                    callbackManager = new CallbackManager(steamClient);
-                    steamUser = steamClient.GetHandler<SteamUser>();
-                    steamFriends = steamClient.GetHandler<SteamFriends>();
+            if (currentStatus == scenes.TryingConnect)
+            {
+                steamClient = new SteamClient();
+                callbackManager = new CallbackManager(steamClient);
+                steamUser = steamClient.GetHandler<SteamUser>();
+                steamFriends = steamClient.GetHandler<SteamFriends>();
 
-                    callbackManager.Subscribe<SteamClient.ConnectedCallback>(onConnected);
-                    callbackManager.Subscribe<SteamClient.DisconnectedCallback>(OnDisconnected);
-                    callbackManager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
-                    callbackManager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
-                    callbackManager.Subscribe<SteamUser.AccountInfoCallback>(OnAccountInfo);
-                    callbackManager.Subscribe<SteamFriends.FriendsListCallback>(OnFriendsList);
-                    callbackManager.Subscribe<SteamFriends.PersonaStateCallback>(OnPersonaState);
-                    callbackManager.Subscribe<SteamFriends.FriendMsgCallback>(OnFriendMsg);
+                callbackManager.Subscribe<SteamClient.ConnectedCallback>(onConnected);
+                callbackManager.Subscribe<SteamClient.DisconnectedCallback>(OnDisconnected);
+                callbackManager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
+                callbackManager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
+                callbackManager.Subscribe<SteamUser.AccountInfoCallback>(OnAccountInfo);
+                callbackManager.Subscribe<SteamFriends.FriendsListCallback>(OnFriendsList);
+                callbackManager.Subscribe<SteamFriends.PersonaStateCallback>(OnPersonaState);
+                callbackManager.Subscribe<SteamFriends.FriendMsgCallback>(OnFriendMsg);
 
-                    botIsRunning = true;
+                botIsRunning = true;
 
-                    Console.Clear();
+                Console.Clear();
 
 
-                    Console.WriteLine($"BOT {bot.name} Connecting to Steam...");
-                    steamClient.Connect();
-                
+                Console.WriteLine($"BOT {bot.name} Connecting to Steam...");
+                steamClient.Connect();
+
             }
             while (botIsRunning)
             {
@@ -464,23 +482,23 @@ namespace SteamBot_
                 if (CountToAddExp >= 100)
                 {
                     CountToAddExp = 0;
-                    for(int i=0;i<ListPlayingGame.Count;i++)
+                    for (int i = 0; i < ListPlayingGame.Count; i++)
                     {
                         if (ListPlayingGame.Count > 0)
                         {
                             var QueryToAdd = dbConnection.Query("UPDATE rpg_users set Exp_ = Exp_ + 1 WHERE id=@myid",
-                                new {myid = ListPlayingGame[i].AccountID});
+                                new { myid = ListPlayingGame[i].AccountID });
                             var SelectCheck = dbConnection.Query("SELECT * FROM rpg_users WHERE id=@myid",
-                                new {myid = ListPlayingGame[i].AccountID}).FirstOrDefault();
+                                new { myid = ListPlayingGame[i].AccountID }).FirstOrDefault();
 
                             if (SelectCheck != null && SelectCheck.Exp_ >= 15)
                             {
                                 var AddLevel = dbConnection.Query(
                                     "UPDATE rpg_users set Level = Level + 1 WHERE id=@myid",
-                                    new {myid = ListPlayingGame[i].AccountID});
+                                    new { myid = ListPlayingGame[i].AccountID });
                                 var RemoveExp = dbConnection.Query("UPDATE rpg_users set Exp_ = 0 WHERE id=@myid",
-                                    new {myid = ListPlayingGame[i].AccountID});
-                                steamFriends.SendChatMessage(ListPlayingGame[i],EChatEntryType.ChatMsg,"[RPG] You have reached a new Level");
+                                    new { myid = ListPlayingGame[i].AccountID });
+                                steamFriends.SendChatMessage(ListPlayingGame[i], EChatEntryType.ChatMsg, "[RPG] You have reached a new Level");
 
                             }
 
@@ -494,7 +512,7 @@ namespace SteamBot_
 
         private static void OnFriendMsg(SteamFriends.FriendMsgCallback obj)
         {
-            
+
             string[] ParamsSepearator = obj.Message.Split(' ');
             if (Commands.ContainsKey(ParamsSepearator[0]))
             {
@@ -523,7 +541,7 @@ namespace SteamBot_
             }
             else
             {
-                if(ListPlayingGame.Contains(obj.FriendID))
+                if (ListPlayingGame.Contains(obj.FriendID))
                     ListPlayingGame.Remove(obj.FriendID);
             }
 
@@ -537,9 +555,9 @@ namespace SteamBot_
             {
                 if (friend.Relationship == EFriendRelationship.Friend)
                 {
-                    if(!listFriendsSteamID.Contains(friend.SteamID))
+                    if (!listFriendsSteamID.Contains(friend.SteamID))
                         listFriendsSteamID.Add(friend.SteamID);
-                    
+
                 }
                 if (friend.Relationship == EFriendRelationship.RequestRecipient)
                 {
