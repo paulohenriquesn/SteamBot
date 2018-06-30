@@ -44,6 +44,7 @@ namespace SteamBot_
     }
     class Program
     {
+        private static Braintwo bw = new Braintwo();
         private static string[] memory_ = new string[2] { String.Empty, String.Empty };
         private static List<RoomBehaviour> Rooms = new List<RoomBehaviour>();
         private static Dictionary<string, int> Rooms_dic = new Dictionary<string, int>();
@@ -137,6 +138,10 @@ namespace SteamBot_
             //Commands           
             ; try
             {
+                CreateCommand("@braintwo", new Action(delegate ()
+                {
+                    bw.Interpreter("$0x",Argument[0]);
+                }));
                 CreateCommand("@brainfuck", new Action(delegate ()
                 {
                     BrainfuckClient = new Brainfuck(Argument[0]);
