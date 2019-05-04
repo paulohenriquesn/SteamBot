@@ -36,8 +36,7 @@ namespace SteamBot_
 
         private static List<SteamID> ListPlayingGame = new List<SteamID>();
         private static int CountToAddExp = 0;
-        private static SQLiteConnection dbConnection = new SQLiteConnection("@Data Source=bot.db;Version=3");
-        //private static VistaDBConnection dbConnection = new VistaDBConnection(@"Data source='C:\Users\Paulo Henrique\OneDrive\databases\steambot.vdb5'");
+        private static SQLiteConnection dbConnection = new SQLiteConnection(@"Data Source=bot.db;Pooling=true;FailIfMissing=false;Version=3");
         private static List<SteamID> listFriendsSteamID = new List<SteamID>();
 
         public static string[] Argument = new string[128];
