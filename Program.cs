@@ -5,28 +5,11 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using SteamKit2;
-using System.Threading.Tasks;
-using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using System.Threading;
 using Dapper;
-using SteamKit2.Unified.Internal;
-//using VistaDB.Provider;
 using System.IO;
-
 using System.Data.SQLite;
-
-
-/*
-create table rpg_users(
-ID int,
-Level int,
-Exp_ int,
-Class varchar(350),
-UName varchar(350)
-);
-*/
-
 
 namespace SteamBot_
 {
