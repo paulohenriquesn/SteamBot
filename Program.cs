@@ -37,6 +37,7 @@ namespace SteamBot_
         private static List<SteamID> ListPlayingGame = new List<SteamID>();
         private static int CountToAddExp = 0;
         private static SQLiteConnection dbConnection = new SQLiteConnection(@"Data Source=bot.db;Pooling=true;FailIfMissing=false;Version=3");
+        //private static VistaDBConnection dbConnection = new VistaDBConnection(@"Data source='C:\Users\Paulo Henrique\OneDrive\databases\steambot.vdb5'");
         private static List<SteamID> listFriendsSteamID = new List<SteamID>();
 
         public static string[] Argument = new string[128];
@@ -164,6 +165,7 @@ namespace SteamBot_
                         string html = web.DownloadString(link);
                         var id = Regex.Match(html, @"xv\.thumbs\.prepareVideo\(([0-9]+)\);").Groups[1].Value;
                         string apicomment = $"https://www.xvideos.com/threads/video-comments/get-posts/top/{id}/0/0";
+                        List<string> namesList = new List<string>();
                         using (WebClient wc = new WebClient())
                         {
                             var json = wc.DownloadString(apicomment);
@@ -171,10 +173,14 @@ namespace SteamBot_
                             var comments = obj["posts"]["posts"];
                             foreach (var key in comments)
                             {
+                                string[] lName = key.ToString().Split(new string[] { "profile" }, StringSplitOptions.None);
                                 string[] l = key.ToString().Split(new string[] { "message" }, StringSplitOptions.None);
                                 commentsList.Add(comment_(l[1]));
+                                namesList.Add(comment_(lName[1]));
                             }
-                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, commentsList[random.Next(0, commentsList.Count)].Replace("&", String.Empty).Replace("<", String.Empty).Replace(";", String.Empty).Replace(">", String.Empty));
+                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, $"{namesList[random.Next(0, namesList.Count)]} falou: {commentsList[random.Next(0, commentsList.Count)].Replace("&", String.Empty).Replace("<", String.Empty).Replace(";", String.Empty).Replace(">", String.Empty)}");
+                            commentsList.Clear();
+                            namesList.Clear();
                         }
                     }
                     catch { goto restart; }
@@ -544,6 +550,7 @@ namespace SteamBot_
                 {
 
                     steamFriends.AddFriend(friend.SteamID);
+                    steamFriends.SendChatMessage(friend.SteamID, EChatEntryType.ChatMsg, "Olá você pode ver meus comandos digitando @help");
 
                 }
             }
