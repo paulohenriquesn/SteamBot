@@ -11,8 +11,10 @@ using Newtonsoft.Json.Linq;
 using System.Threading;
 using Dapper;
 using SteamKit2.Unified.Internal;
-using VistaDB.Provider;
+//using VistaDB.Provider;
 using System.IO;
+
+using System.Data.SQLite;
 
 
 /*
@@ -51,7 +53,8 @@ namespace SteamBot_
 
         private static List<SteamID> ListPlayingGame = new List<SteamID>();
         private static int CountToAddExp = 0;
-        private static VistaDBConnection dbConnection = new VistaDBConnection(@"Data source='C:\Users\Paulo Henrique\OneDrive\databases\steambot.vdb5'");
+        private static SQLiteConnection dbConnection = new SQLiteConnection("@Data Source=bot.db;Version=3");
+        //private static VistaDBConnection dbConnection = new VistaDBConnection(@"Data source='C:\Users\Paulo Henrique\OneDrive\databases\steambot.vdb5'");
         private static List<SteamID> listFriendsSteamID = new List<SteamID>();
 
         public static string[] Argument = new string[128];
@@ -140,7 +143,7 @@ namespace SteamBot_
             {
                 CreateCommand("@braintwo", new Action(delegate ()
                 {
-                    bw.Interpreter("$0x",Argument[0]);
+                    bw.Interpreter("$0x", Argument[0]);
                 }));
                 CreateCommand("@brainfuck", new Action(delegate ()
                 {
@@ -149,62 +152,50 @@ namespace SteamBot_
                 }));
                 CreateCommand("@xvideos", new Action(delegate ()
                 {
-                int timer = 0;
-                steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
-                    "perae estou procurando um comentario...");
-            restart:
-                timer += 1;
-                if (timer <= 15)
-                {
-                    HtmlWeb web = new HtmlWeb();
-                    HtmlAgilityPack.HtmlDocument document = new HtmlDocument();
-                    int numb = random.Next(0, 100);
-                    string link = $"https://www.xvideos.com/lang/portugues/{numb}";
-                    document = web.Load(link);
-                    string html = document.DocumentNode.InnerHtml;
-                    var id = Regex.Match(html, @"xv\.thumbs\.prepareVideo\(([0-9]+)\);").Groups[1].Value;
-                        if (string.IsNullOrEmpty(id))
-                        {
-                            goto restart;
-                        }
-                        
-                        try
-                        {
-    
-                            string apicomment = $"https://www.xvideos.com/video-get-comments/{id}/0/";
-
-                            using (WebClient wc = new WebClient())
-                            {
-                                var json = wc.DownloadString(apicomment);
-                                JObject obj = JObject.Parse(json);
-                                var comments = obj["comments"].Select(x => new
-                                {
-                                    name = x["n"].ToString(),
-                                    comment = WebUtility.HtmlDecode(x["c"].ToString())
-                                }).ToArray();
-                                if (comments.Length == 0)
-                                    goto restart;
-                                else
-                                {
-                                    var selected = comments[random.Next(comments.Length)];
-                                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
-                                        $"{selected.name} comentou: {selected.comment}");
-                                }
-
-                            }
-
-                        }
-                        catch
-                        {
-                            goto restart;
-                        }
-                    }
-                    else
+                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, "calma ae xo ve");
+                restart:
+                    try
                     {
-                        steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg,
-                                        $"não achei comentarios :(");
-                    }
+                        List<string> commentsList = new List<string>();
 
+                        string comment_(string a)
+                        {
+                            bool count = true;
+                            string result = String.Empty;
+                            for (int i = 0; i < a.Length; i++)
+                            {
+                                if (count)
+                                    if (a[i] != ',')
+                                    {
+                                        result = result + a[i];
+                                    }
+                                    else
+                                    {
+                                        count = false;
+                                    }
+                            }
+                            return result.Replace("\"", String.Empty).Replace(": ", String.Empty);
+                        }
+                        WebClient web = new WebClient();
+                        int numb = random.Next(1, 37);
+                        string link = $"https://www.xvideos.com/lang/portugues/{numb}";
+                        string html = web.DownloadString(link);
+                        var id = Regex.Match(html, @"xv\.thumbs\.prepareVideo\(([0-9]+)\);").Groups[1].Value;
+                        string apicomment = $"https://www.xvideos.com/threads/video-comments/get-posts/top/{id}/0/0";
+                        using (WebClient wc = new WebClient())
+                        {
+                            var json = wc.DownloadString(apicomment);
+                            JObject obj = JObject.Parse(json);
+                            var comments = obj["posts"]["posts"];
+                            foreach (var key in comments)
+                            {
+                                string[] l = key.ToString().Split(new string[] { "message" }, StringSplitOptions.None);
+                                commentsList.Add(comment_(l[1]));
+                            }
+                            steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, commentsList[random.Next(0, commentsList.Count)].Replace("&", String.Empty).Replace("<", String.Empty).Replace(";", String.Empty).Replace(">", String.Empty));
+                        }
+                    }
+                    catch { goto restart; }
 
                 }));
                 CreateCommand("@friends", new Action(delegate ()
@@ -489,26 +480,29 @@ namespace SteamBot_
                     CountToAddExp = 0;
                     for (int i = 0; i < ListPlayingGame.Count; i++)
                     {
-                        if (ListPlayingGame.Count > 0)
+                        try
                         {
-                            var QueryToAdd = dbConnection.Query("UPDATE rpg_users set Exp_ = Exp_ + 1 WHERE id=@myid",
-                                new { myid = ListPlayingGame[i].AccountID });
-                            var SelectCheck = dbConnection.Query("SELECT * FROM rpg_users WHERE id=@myid",
-                                new { myid = ListPlayingGame[i].AccountID }).FirstOrDefault();
-
-                            if (SelectCheck != null && SelectCheck.Exp_ >= 15)
+                            if (ListPlayingGame.Count > 0)
                             {
-                                var AddLevel = dbConnection.Query(
-                                    "UPDATE rpg_users set Level = Level + 1 WHERE id=@myid",
+                                var QueryToAdd = dbConnection.Query("UPDATE rpg_users set Exp_ = Exp_ + 1 WHERE id=@myid",
                                     new { myid = ListPlayingGame[i].AccountID });
-                                var RemoveExp = dbConnection.Query("UPDATE rpg_users set Exp_ = 0 WHERE id=@myid",
-                                    new { myid = ListPlayingGame[i].AccountID });
-                                steamFriends.SendChatMessage(ListPlayingGame[i], EChatEntryType.ChatMsg, "[RPG] You have reached a new Level");
+                                var SelectCheck = dbConnection.Query("SELECT * FROM rpg_users WHERE id=@myid",
+                                    new { myid = ListPlayingGame[i].AccountID }).FirstOrDefault();
+
+                                if (SelectCheck != null && SelectCheck.Exp_ >= 15)
+                                {
+                                    var AddLevel = dbConnection.Query(
+                                        "UPDATE rpg_users set Level = Level + 1 WHERE id=@myid",
+                                        new { myid = ListPlayingGame[i].AccountID });
+                                    var RemoveExp = dbConnection.Query("UPDATE rpg_users set Exp_ = 0 WHERE id=@myid",
+                                        new { myid = ListPlayingGame[i].AccountID });
+                                    steamFriends.SendChatMessage(ListPlayingGame[i], EChatEntryType.ChatMsg, "[RPG] You have reached a new Level");
+
+                                }
 
                             }
-
                         }
-
+                        catch { }
                     }
                 }
             }
