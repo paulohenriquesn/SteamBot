@@ -29,6 +29,16 @@ namespace SteamBot_
     }
     class Program
     {
+
+        //cerebro da minha webnamorada
+        private static string[] AnswerAndQuestion = new string[2] { String.Empty, String.Empty };
+        private static BrainManager bManager = new BrainManager();
+        private static string[] MemoriaData = File.ReadAllLines("memoria.data");
+
+
+
+        //another
+
         private static Braintwo bw = new Braintwo();
         private static string[] memory_ = new string[2] { String.Empty, String.Empty };
         private static List<RoomBehaviour> Rooms = new List<RoomBehaviour>();
@@ -108,6 +118,53 @@ namespace SteamBot_
                     break;
             }
         }
+        static void ReloadMemoria()
+        {
+            MemoriaData = File.ReadAllLines("memoria.data");
+
+            for (int i = 0; i < MemoriaData.Length; i++)
+            {
+                try
+                {
+                    if (!bManager.brainData.ContainsKey(MemoriaData[i].Replace("#", String.Empty)))
+                    {
+                        bManager.brainData.Add(MemoriaData[i].Replace("#", String.Empty), MemoriaData[i + 1].Replace("-", String.Empty));
+                    }
+                }
+                catch { }
+            }
+
+
+            /*AnswerAndQuestion = new string[2] { String.Empty, String.Empty };
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+            foreach (var memoria in MemoriaData)
+            {
+                string response = String.Empty;
+                if (memoria[0] == '#')
+                {
+                    response = memoria.Replace("#", String.Empty);
+                    AnswerAndQuestion[0] = response;
+                }
+                else if (memoria[0] == '-')
+                {
+                    response = memoria.Replace("-", String.Empty);
+                    AnswerAndQuestion[1] = response;
+                }
+                if (!String.IsNullOrWhiteSpace(AnswerAndQuestion[0]) && !String.IsNullOrWhiteSpace(AnswerAndQuestion[1]))
+                {
+                    try
+                    {
+                        bManager.brainData.Add(AnswerAndQuestion[0], AnswerAndQuestion[1]);
+                    }
+                    catch
+                    { //ignore same key
+
+                    }
+                    AnswerAndQuestion[0] = String.Empty;
+                    AnswerAndQuestion[1] = String.Empty;
+                }
+            }*/
+        }
         static void CreateCommand(string command, Action action_)
         {
             Commands.Add(command, new Command() { command_ = command, action = action_ });
@@ -120,6 +177,38 @@ namespace SteamBot_
 
         static void Main(string[] args)
         {
+
+            foreach (var memoria in MemoriaData)
+            {
+                string response = String.Empty;
+                if (memoria[0] == '#')
+                {
+                    response = memoria.Replace("#", String.Empty);
+                    AnswerAndQuestion[0] = response;
+                }
+                else if (memoria[0] == '-')
+                {
+                    response = memoria.Replace("-", String.Empty);
+                    AnswerAndQuestion[1] = response;
+                }
+                if (!String.IsNullOrWhiteSpace(AnswerAndQuestion[0]) && !String.IsNullOrWhiteSpace(AnswerAndQuestion[1]))
+                {
+                    try
+                    {
+                        bManager.brainData.Add(AnswerAndQuestion[0], AnswerAndQuestion[1]);
+                    }
+                    catch
+                    { //ignore same key
+
+                    }
+                    AnswerAndQuestion[0] = String.Empty;
+                    AnswerAndQuestion[1] = String.Empty;
+
+                }
+            }
+
+             
+
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             //Commands           
             ; try
@@ -499,8 +588,8 @@ namespace SteamBot_
 
         private static void OnFriendMsg(SteamFriends.FriendMsgCallback obj)
         {
-
             string[] ParamsSepearator = obj.Message.Split(' ');
+
             if (Commands.ContainsKey(ParamsSepearator[0]))
             {
                 for (int i = 1; i < ParamsSepearator.Length; i++)
@@ -518,6 +607,18 @@ namespace SteamBot_
                 steamIDMemory = obj.Sender;
                 ExecuteCommand(ParamsSepearator[0]);
             }
+            else
+            {
+
+
+                //checkpoint2525
+                steamIDMemory = obj.Sender;
+
+                ReloadMemoria();
+                if (bManager.getResponse(obj.Message).Replace("#", String.Empty).Replace("-", String.Empty).Length > 1)
+                    steamFriends.SendChatMessage(steamIDMemory, EChatEntryType.ChatMsg, bManager.getResponse(obj.Message).Replace("#", String.Empty).Replace("-", String.Empty));
+            }
+
         }
 
         private static void OnPersonaState(SteamFriends.PersonaStateCallback obj)
